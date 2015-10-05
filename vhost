@@ -1,0 +1,32 @@
+server {
+     listen       80;
+     server_name  restAPI;
+     root    /www/restAPI;
+     index   Register.php;
+
+     location / {
+         set            $original_query_string            $query_string;
+         set            $redirect_url                     $request_uri;
+         try_files      $uri/ /Register.php;
+     }
+
+     location ~* \.php$ {
+
+         if ($request_uri ~ (/.*)(/)?\?.+)
+         {
+             set                   $redirect_url                     $1;
+         }
+
+         try_files   $uri /Register.php?$query_string;
+         fastcgi_param                 PATH_APP              /www/restAPI/;
+         fastcgi_param                 QUERY_STRING          $original_query_string;
+         fastcgi_param                 REDIRECT_QUERY_STRING $original_query_string;
+         fastcgi_buffer_size           128k;
+         fastcgi_buffers               256             16k;
+         fastcgi_busy_buffers_size     256k;
+         fastcgi_pass                  unix:/var/run/php-fpm.sock;
+         fastcgi_index Register.php;
+         fastcgi_param  SCRIPT_FILENAME  $document_root/$fastcgi_script_name;
+         include        fastcgi_params;
+     }
+ }
